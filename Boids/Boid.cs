@@ -14,19 +14,24 @@ namespace Boids
 		public float Speed;
 
 		public float rotation;
+		float RotateSpeed = (float)Program.RANDOM.NextDouble();
 
 		public Matrix4 model;
 
 		public Boid()
 		{
 			Position = new Vector3(0, 0, 0);
-			Velocity = new Vector3(0, 1, 0);
-			Speed = (float)Program.RANDOM.NextDouble();
+			Velocity = new Vector3((float)Program.RANDOM.NextDouble() * 2.0f - 1.0f, (float)Program.RANDOM.NextDouble() * 2.0f - 1.0f, (float)Program.RANDOM.NextDouble() * 2.0f - 1.0f).Normalized();
+			Speed = 2f;
+
+			
 		}
 
 		public void Update(float deltaTime)
 		{
-			model = Matrix4.Identity * Matrix4.CreateTranslation(Position) * Matrix4.CreateRotationX(rotation += 1f * Speed * deltaTime);
+			model = Matrix4.Identity * Matrix4.CreateRotationX(rotation += 2f * RotateSpeed * deltaTime) * Matrix4.CreateTranslation(Position);
+
+			Position += Velocity * Speed * deltaTime;
 		}
 
 	}

@@ -103,7 +103,7 @@ namespace Boids
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60f), (float)Width / (float)Height, 0.1f, 100.0f);
-			view = Matrix4.LookAt(new Vector3(0, 7, -7), Vector3.Zero, new Vector3(0, 1, 0));
+			view = Matrix4.LookAt(new Vector3(0, 7, -25), Vector3.Zero, new Vector3(0, 1, 0));
 
 			GL.UseProgram(shader);
 			GL.BindVertexArray(vao);
