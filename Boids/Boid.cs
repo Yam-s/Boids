@@ -9,15 +9,25 @@ namespace Boids
 {
 	public class Boid
 	{
-		Vector3 Position;
-		Vector3 Velocity;
-		float Speed;
+		public Vector3 Position;
+		public Vector3 Velocity;
+		public float Speed;
+
+		public float rotation;
+
+		public Matrix4 model;
 
 		public Boid()
 		{
 			Position = new Vector3(0, 0, 0);
 			Velocity = new Vector3(0, 1, 0);
-			Speed = 10;
+			Speed = (float)Program.RANDOM.NextDouble();
 		}
+
+		public void Update(float deltaTime)
+		{
+			model = Matrix4.Identity * Matrix4.CreateTranslation(Position) * Matrix4.CreateRotationX(rotation += 1f * Speed * deltaTime);
+		}
+
 	}
 }

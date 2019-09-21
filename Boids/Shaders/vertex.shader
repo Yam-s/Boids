@@ -9,5 +9,10 @@ uniform mat4 MVP;
 void main()
 {
 	gl_Position = MVP * vPosition;
-	color = clamp(vPosition, 0.1f, 1.0f);
+
+	vec4 testtwo = vPosition * MVP;
+	float x = mix(0, 1, testtwo.x);
+	float y = mix(0, 1, testtwo.y);
+	float z = mix(0, 1, testtwo.z);
+	color = clamp(vec4(x,y,z,1.0f), 0.2f, 0.8f);
 }

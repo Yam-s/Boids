@@ -22,6 +22,8 @@ namespace Boids
 
 		Matrix4 projection, view;
 
+		List<Boid> boids = new List<Boid>();
+
 		float[] modelVertices = new float[]
 		{
 			 0.0f,  1.3f,  0.0f, // Triangle 1
@@ -55,11 +57,11 @@ namespace Boids
 			base.OnLoad(e);
 			GL.ClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 			GL.Enable(EnableCap.DepthTest);
+			GL.DepthFunc(DepthFunction.Less);
 
 			//! Load model for a boid
 			vao = GL.GenVertexArray();
 			GL.BindVertexArray(vao);
-
 
 			vbo = GL.GenBuffer();
 			GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
@@ -71,14 +73,28 @@ namespace Boids
 			shader = ShaderHandler.LoadShader("vertex.shader", "fragment.shader");
 
 			mvp_id = GL.GetUniformLocation(shader, "MVP");
+
+			// Create boids
+			for (var i = -25.5f; i <= 25.5f; i += 2.5f)
+			{
+				var boid = new Boid();
+				boid.Position = new Vector3(i, 0, 0);
+				boids.Add(boid);
+			}
 		}
 
 		protected override void OnUpdateFrame(FrameEventArgs e)
 		{
 			base.OnUpdateFrame(e);
 
+			// Update boids
+			foreach (var boid in boids)
+			{
+				boid.Update((float)e.Time);
+			}
+
 			if (Keyboard.GetState().IsKeyDown(Key.Escape))
-				Exit();
+			Exit();
 		}
 
 		protected override void OnRenderFrame(FrameEventArgs e)
@@ -86,21 +102,19 @@ namespace Boids
 			base.OnRenderFrame(e);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-			projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90f), (float)Width / (float)Height, 0.001f, 1000.0f);
-			view = Matrix4.LookAt(new Vector3(0, 2, -3), Vector3.Zero, new Vector3(0, 1, 0));
+			projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60f), (float)Width / (float)Height, 0.1f, 100.0f);
+			view = Matrix4.LookAt(new Vector3(0, 7, -7), Vector3.Zero, new Vector3(0, 1, 0));
 
 			GL.UseProgram(shader);
 			GL.BindVertexArray(vao);
 
-			for (var i = -2; i <= 2; i += 2)
+			// Draw boids
+			foreach (var boid in boids)
 			{
-				var model = Matrix4.Identity * Matrix4.CreateRotationY(rotation += 1f * (float)e.Time) * Matrix4.CreateTranslation(new Vector3((float)i * 2, 0, 0));
-				var mvp = model * view * projection;
+				var mvp = boid.model * view * projection;
 				GL.UniformMatrix4(mvp_id, false, ref mvp);
-
 				GL.DrawArrays(PrimitiveType.Triangles, 0, 18);
 			}
-
 
 			SwapBuffers();
 		}
