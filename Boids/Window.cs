@@ -50,7 +50,7 @@ namespace Boids
 
 		public Window(int width, int height) : base(width, height, GraphicsMode.Default, "", GameWindowFlags.FixedWindow)
 		{
-			VSync = VSyncMode.Off;
+			VSync = VSyncMode.Adaptive;
 		}
 
 		protected override void OnLoad(EventArgs e)
