@@ -24,12 +24,12 @@ namespace Boids
 			Velocity = new Vector3((float)Program.RANDOM.NextDouble() * 2.0f - 1.0f, (float)Program.RANDOM.NextDouble() * 2.0f - 1.0f, (float)Program.RANDOM.NextDouble() * 2.0f - 1.0f).Normalized();
 			Speed = 2f;
 
-			
+
 		}
 
 		public void Update(float deltaTime)
 		{
-			model = Matrix4.Identity * Matrix4.CreateRotationX(rotation += 2f * RotateSpeed * deltaTime) * Matrix4.CreateTranslation(Position);
+			model = Matrix4.CreateScale(0.25f) * Matrix4.CreateRotationX(rotation += 2f * RotateSpeed * deltaTime) * Matrix4.CreateTranslation(Position);
 
 			Position += Velocity * Speed * deltaTime;
 		}

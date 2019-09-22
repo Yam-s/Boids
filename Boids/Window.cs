@@ -13,12 +13,9 @@ namespace Boids
 {
 	class Window : GameWindow
 	{
-
 		int vao, vbo;
 		int mvp_id;
 		int shader;
-
-		float rotation = 0f;
 
 		Matrix4 projection, view;
 
@@ -75,7 +72,7 @@ namespace Boids
 			mvp_id = GL.GetUniformLocation(shader, "MVP");
 
 			// Create boids
-			for (var i = -25.5f; i <= 25.5f; i += 2.5f)
+			for (var i = -22f; i <= 22f; i += 0.045f)
 			{
 				var boid = new Boid();
 				boid.Position = new Vector3(i, 0, 0);
@@ -94,12 +91,13 @@ namespace Boids
 			}
 
 			if (Keyboard.GetState().IsKeyDown(Key.Escape))
-			Exit();
+				Exit();
 		}
 
 		protected override void OnRenderFrame(FrameEventArgs e)
 		{
 			base.OnRenderFrame(e);
+			this.Title = this.RenderFrequency.ToString();
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60f), (float)Width / (float)Height, 0.1f, 100.0f);
@@ -114,7 +112,7 @@ namespace Boids
 				var mvp = boid.model * view * projection;
 				GL.UniformMatrix4(mvp_id, false, ref mvp);
 				GL.DrawArrays(PrimitiveType.Triangles, 0, 18);
-			}
+				}
 
 			SwapBuffers();
 		}

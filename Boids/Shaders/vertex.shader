@@ -10,9 +10,8 @@ void main()
 {
 	gl_Position = MVP * vPosition;
 
-	vec4 testtwo = vPosition * MVP;
-	float x = mix(0, 1, testtwo.x);
-	float y = mix(0, 1, testtwo.y);
-	float z = mix(0, 1, testtwo.z);
+	float x = mix(0, 1, vPosition.x);
+	float y = mix(0, 1, vPosition.y);
+	float z = mix(0, 1, vPosition.z);
 	color = clamp(vec4(x,y,z,1.0f), 0.2f, 0.8f);
 }
