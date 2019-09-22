@@ -13,8 +13,8 @@ namespace Boids
 {
 	class Window : GameWindow
 	{
-		int vao, vbo;
-		int mvp_id;
+		int vao, vbo, _ModelMatrixArrayVBO;
+		int view_id, projection_id;
 		int shader;
 
 		Matrix4 projection, view;
@@ -44,9 +44,13 @@ namespace Boids
 			 1.0f, -1.0f, -1.0f
 		};
 
+		// Array to store all boids' model matrices
+		// Will be updated and used to draw all boids using instanced arrays
+		List<Matrix4> ModelMatrices = new List<Matrix4>();
+
 		public Window(int width, int height) : base(width, height, GraphicsMode.Default, "", GameWindowFlags.FixedWindow)
 		{
-			VSync = VSyncMode.Adaptive;
+			VSync = VSyncMode.Off;
 		}
 
 		protected override void OnLoad(EventArgs e)
@@ -67,17 +71,44 @@ namespace Boids
 			GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
 			GL.EnableVertexArrayAttrib(vao, 0);
 
-			shader = ShaderHandler.LoadShader("vertex.shader", "fragment.shader");
-
-			mvp_id = GL.GetUniformLocation(shader, "MVP");
-
 			// Create boids
-			for (var i = -22f; i <= 22f; i += 0.045f)
+			for (var i = -20f; i <= 20f; i += 0.02f)
 			{
 				var boid = new Boid();
 				boid.Position = new Vector3(i, 0, 0);
 				boids.Add(boid);
 			}
+			Console.WriteLine($"{boids.Count} boids");
+
+			// Add boids model matrices to array
+			foreach (var boid in boids)
+			{
+				ModelMatrices.Add(boid.model);
+			}
+
+			//! Set up matrix instanced arrays
+			_ModelMatrixArrayVBO = GL.GenBuffer();
+			GL.BindBuffer(BufferTarget.ArrayBuffer, _ModelMatrixArrayVBO);
+			GL.BufferData(BufferTarget.ArrayBuffer, boids.Count * (Vector4.SizeInBytes * 4), IntPtr.Zero, BufferUsageHint.DynamicDraw);
+
+			GL.EnableVertexArrayAttrib(vao, 1);
+			GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 4 * Vector4.SizeInBytes, 0);
+			GL.EnableVertexArrayAttrib(vao, 2);
+			GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, 4 * Vector4.SizeInBytes, Vector4.SizeInBytes);
+			GL.EnableVertexArrayAttrib(vao, 3);
+			GL.VertexAttribPointer(3, 4, VertexAttribPointerType.Float, false, 4 * Vector4.SizeInBytes, Vector4.SizeInBytes * 2);
+			GL.EnableVertexArrayAttrib(vao, 4);
+			GL.VertexAttribPointer(4, 4, VertexAttribPointerType.Float, false, 4 * Vector4.SizeInBytes, Vector4.SizeInBytes * 3);
+
+			GL.VertexAttribDivisor(1, 1);
+			GL.VertexAttribDivisor(2, 1);
+			GL.VertexAttribDivisor(3, 1);
+			GL.VertexAttribDivisor(4, 1);
+
+			shader = ShaderHandler.LoadShader("vertex.shader", "fragment.shader");
+
+			view_id = GL.GetUniformLocation(shader, "view");
+			projection_id = GL.GetUniformLocation(shader, "projection");
 		}
 
 		protected override void OnUpdateFrame(FrameEventArgs e)
@@ -85,10 +116,14 @@ namespace Boids
 			base.OnUpdateFrame(e);
 
 			// Update boids
+			ModelMatrices.Clear();
 			foreach (var boid in boids)
 			{
 				boid.Update((float)e.Time);
+				ModelMatrices.Add(boid.model);
 			}
+
+			GL.BufferSubData(BufferTarget.ArrayBuffer, (IntPtr)0, boids.Count * (Vector4.SizeInBytes * 4), ModelMatrices.ToArray());
 
 			if (Keyboard.GetState().IsKeyDown(Key.Escape))
 				Exit();
@@ -105,14 +140,10 @@ namespace Boids
 
 			GL.UseProgram(shader);
 			GL.BindVertexArray(vao);
-
-			// Draw boids
-			foreach (var boid in boids)
-			{
-				var mvp = boid.model * view * projection;
-				GL.UniformMatrix4(mvp_id, false, ref mvp);
-				GL.DrawArrays(PrimitiveType.Triangles, 0, 18);
-				}
+			
+			GL.UniformMatrix4(view_id, false, ref view);
+			GL.UniformMatrix4(projection_id, false, ref projection);
+			GL.DrawArraysInstanced(PrimitiveType.Triangles, 0, 18, boids.Count);
 
 			SwapBuffers();
 		}

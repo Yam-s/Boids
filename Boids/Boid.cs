@@ -30,7 +30,7 @@ namespace Boids
 		public void Update(float deltaTime)
 		{
 			model = Matrix4.CreateScale(0.25f) * Matrix4.CreateRotationX(rotation += 2f * RotateSpeed * deltaTime) * Matrix4.CreateTranslation(Position);
-
+			//model = Matrix4.Identity;
 			Position += Velocity * Speed * deltaTime;
 		}
 

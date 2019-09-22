@@ -1,15 +1,17 @@
 ﻿#version 450 core
 
 layout (location=0) in vec4 vPosition;
+layout (location=1) in mat4 modelMatrix;
 
 out vec4 color;
 
-uniform mat4 MVP;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main()
 {
-	gl_Position = MVP * vPosition;
-
+	mat4 mvp = projection * view * modelMatrix;
+	gl_Position = mvp * vPosition;
 	float x = mix(0, 1, vPosition.x);
 	float y = mix(0, 1, vPosition.y);
 	float z = mix(0, 1, vPosition.z);
