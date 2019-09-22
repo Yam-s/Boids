@@ -19,7 +19,7 @@ namespace Boids
 
 		Matrix4 projection, view;
 
-		Flock flock = new Flock(2000);
+		Flock flock = new Flock(500);
 
 		float[] modelVertices = new float[]
 		{

@@ -8,7 +8,7 @@ using OpenTK;
 
 namespace Boids
 {
-	class Flock
+	public class Flock
 	{
 		public List<Boid> Boids = new List<Boid>();
 		// Array to store all boids' model matrices
@@ -24,7 +24,7 @@ namespace Boids
 			for (var i = 0; i < FlockSize; i++)
 			{
 				var boid = new Boid();
-				boid.Position = new Vector3(0, 0, 0);
+				boid.Position = new Vector3(Program.RANDOM.Next(10) * 2 - 10, Program.RANDOM.Next(10) * 2 - 10, Program.RANDOM.Next(10) * 2 - 10);
 				Boids.Add(boid);
 			}
 		}
@@ -32,9 +32,9 @@ namespace Boids
 		public List<Matrix4> Update(float deltaTime)
 		{
 			var ModelMatrices = new List<Matrix4>();
-			foreach (Boid boid in Boids)
+			foreach (var boid in Boids)
 			{
-				boid.Update(deltaTime);
+				boid.Update(deltaTime, this);
 				ModelMatrices.Add(boid.model);
 			}
 
