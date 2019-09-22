@@ -12,7 +12,7 @@ namespace Boids
 		public Vector3 Position;
 		public Vector3 Velocity;
 		public float Speed;
-		public float ViewDistance = 2f;
+		public float ViewDistance = 1f;
 
 		public float rotation;
 		float RotateSpeed = (float)Program.RANDOM.NextDouble();
@@ -60,6 +60,29 @@ namespace Boids
 				Velocity += dir;
 
 				//! Cohesion
+				dir = new Vector3(0, 0, 0);
+				Vector3 pos = new Vector3(0, 0, 0);
+				BoidsInRange = 0;
+				foreach (var boid in flock.Boids)
+				{
+					if (boid == this)
+						continue;
+
+					if ((boid.Position - Position).Length < ViewDistance)
+					{
+						dir += boid.Position;
+						BoidsInRange++;
+					}
+				}
+				if (BoidsInRange > 0)
+				{
+					pos /= BoidsInRange;
+					dir = (pos - Position).Normalized();
+					dir -= Velocity * 0.025f;
+				}
+
+				Velocity += dir;
+
 			}
 			Position += Velocity.Normalized() * Speed * deltaTime;
 		}
