@@ -19,7 +19,7 @@ namespace Boids
 
 		Matrix4 projection, view;
 
-		List<Boid> boids = new List<Boid>();
+		Flock flock = new Flock(2000);
 
 		float[] modelVertices = new float[]
 		{
@@ -44,10 +44,6 @@ namespace Boids
 			 1.0f, -1.0f, -1.0f
 		};
 
-		// Array to store all boids' model matrices
-		// Will be updated and used to draw all boids using instanced arrays
-		List<Matrix4> ModelMatrices = new List<Matrix4>();
-
 		public Window(int width, int height) : base(width, height, GraphicsMode.Default, "", GameWindowFlags.FixedWindow)
 		{
 			VSync = VSyncMode.Adaptive;
@@ -71,25 +67,11 @@ namespace Boids
 			GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
 			GL.EnableVertexArrayAttrib(vao, 0);
 
-			// Create boids
-			for (var i = -20f; i <= 20f; i += 0.02f)
-			{
-				var boid = new Boid();
-				boid.Position = new Vector3(i, 0, 0);
-				boids.Add(boid);
-			}
-			Console.WriteLine($"{boids.Count} boids");
-
-			// Add boids model matrices to array
-			foreach (var boid in boids)
-			{
-				ModelMatrices.Add(boid.model);
-			}
 
 			//! Set up matrix instanced arrays
 			_ModelMatrixArrayVBO = GL.GenBuffer();
 			GL.BindBuffer(BufferTarget.ArrayBuffer, _ModelMatrixArrayVBO);
-			GL.BufferData(BufferTarget.ArrayBuffer, boids.Count * (Vector4.SizeInBytes * 4), IntPtr.Zero, BufferUsageHint.DynamicDraw);
+			GL.BufferData(BufferTarget.ArrayBuffer, flock.Boids.Count * (Vector4.SizeInBytes * 4), IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
 			GL.EnableVertexArrayAttrib(vao, 1);
 			GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 4 * Vector4.SizeInBytes, 0);
@@ -116,14 +98,9 @@ namespace Boids
 			base.OnUpdateFrame(e);
 
 			// Update boids
-			ModelMatrices.Clear();
-			foreach (var boid in boids)
-			{
-				boid.Update((float)e.Time);
-				ModelMatrices.Add(boid.model);
-			}
+			var ModelMatrices = flock.Update((float)e.Time);
 
-			GL.BufferSubData(BufferTarget.ArrayBuffer, (IntPtr)0, boids.Count * (Vector4.SizeInBytes * 4), ModelMatrices.ToArray());
+			GL.BufferSubData(BufferTarget.ArrayBuffer, (IntPtr)0, flock.Boids.Count * (Vector4.SizeInBytes * 4), ModelMatrices.ToArray());
 
 			if (Keyboard.GetState().IsKeyDown(Key.Escape))
 				Exit();
@@ -143,7 +120,7 @@ namespace Boids
 			
 			GL.UniformMatrix4(view_id, false, ref view);
 			GL.UniformMatrix4(projection_id, false, ref projection);
-			GL.DrawArraysInstanced(PrimitiveType.Triangles, 0, 18, boids.Count);
+			GL.DrawArraysInstanced(PrimitiveType.Triangles, 0, 18, flock.Boids.Count);
 
 			SwapBuffers();
 		}

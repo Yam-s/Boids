@@ -22,9 +22,7 @@ namespace Boids
 		{
 			Position = new Vector3(0, 0, 0);
 			Velocity = new Vector3((float)Program.RANDOM.NextDouble() * 2.0f - 1.0f, (float)Program.RANDOM.NextDouble() * 2.0f - 1.0f, (float)Program.RANDOM.NextDouble() * 2.0f - 1.0f).Normalized();
-			Speed = 2f;
-
-
+			Speed = (float)Program.RANDOM.NextDouble() * 3.0f;
 		}
 
 		public void Update(float deltaTime)
