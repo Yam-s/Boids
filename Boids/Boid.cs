@@ -11,133 +11,151 @@ namespace Boids
 	{
 		public Vector3 Position;
 		public Vector3 Velocity;
-		public float Speed;
+		public Vector3 Acceleration = new Vector3(0,0,0);
 		public float ViewDistance = 2f;
-		public float TurnSpeed = 0.05f;
+
+		public float TurnSpeed = 1f;
+
+		public float SeparationStrength = 0.125f;
+		public float AlignmentStrength = 0.125f;
+		public float CohesionStrength = 0.2f;
 
 		public Matrix4 model;
 
 		public Boid()
 		{
-			Position = new Vector3(0, 0, 0);
-			Velocity = new Vector3((float)Program.RANDOM.NextDouble() * 2.0f - 1.0f, (float)Program.RANDOM.NextDouble() * 2.0f - 1.0f, (float)Program.RANDOM.NextDouble() * 2.0f - 1.0f).Normalized();
-			Speed = 6.0f;
+		}
+
+		private void ApplyForce(Vector3 force)
+		{
+			Acceleration += force;
 		}
 
 		public void Update(float deltaTime, Flock flock)
 		{
-			model = Matrix4.CreateScale(0.125f) * Matrix4.CreateTranslation(Position);
+			model = Matrix4.CreateScale(0.075f) * Matrix4.CreateTranslation(Position);
 
 			Bounds();
 
-			if (flock.Boids != null && flock.Boids.Count > 0)
+			if (flock.Boids == null && flock.Boids.Count <= 1)
+				return;
+
+			var neighbours = new List<Boid>();
+			foreach (var boid in flock.Boids)
 			{
-				//! Separation
-				var dir = new Vector3(0, 0, 0);
-				int BoidsInRange = 0;
-				foreach (var boid in flock.Boids)
-				{
-					if (boid == this)
-						continue;
+				if (boid == this)
+					continue;
 
-					var d = (boid.Position - Position).Length;
-					if (d < ViewDistance)
-					{
-						var avoidDir = Position - boid.Position;
-						avoidDir /= d;
-						dir += avoidDir;
-						BoidsInRange++;
-					}
-				}
-				if (BoidsInRange > 0)
-				{
-					dir /= BoidsInRange;
-					dir = dir.Normalized();
-					dir -= Velocity * TurnSpeed;
-				}
-
-				Velocity += dir;
-
-
-				//! Alignment
-				dir = new Vector3(0, 0, 0);
-				BoidsInRange = 0;
-				foreach (var boid in flock.Boids)
-				{
-					if (boid == this)
-						continue;
-
-					if ((boid.Position - Position).Length < ViewDistance)
-					{
-						dir += boid.Velocity;
-						BoidsInRange++;
-					}
-				}
-				if (BoidsInRange > 0)
-				{
-					dir /= BoidsInRange;
-					dir = dir.Normalized();
-					dir -= Velocity * TurnSpeed;
-				}
-
-				Velocity += dir;
-
-				//! Cohesion
-				dir = new Vector3(0, 0, 0);
-				var pos = new Vector3(0, 0, 0);
-				BoidsInRange = 0;
-				foreach (var boid in flock.Boids)
-				{
-					if (boid == this)
-						continue;
-
-					if ((boid.Position - Position).Length < ViewDistance)
-					{
-						dir += boid.Position;
-						BoidsInRange++;
-					}
-				}
-				if (BoidsInRange > 0)
-				{
-					pos /= BoidsInRange;
-					dir = (pos - Position).Normalized();
-					dir -= Velocity * TurnSpeed;
-				}
-
-				Velocity += dir;
-
+				if ((boid.Position - Position).Length < ViewDistance)
+					neighbours.Add(boid);
 			}
 
-			Position += Velocity.Normalized() * Speed * deltaTime;
+			Separate(neighbours);
+			Align(neighbours);
+			Cohesion(neighbours);
+
+			Velocity += Acceleration;
+			Position += Velocity * deltaTime;
+			Acceleration = new Vector3(0, 0, 0);
 		}
+
+		private void Separate(List<Boid> neighbours)
+		{
+			var dir = new Vector3(0, 0, 0);
+			foreach (var boid in neighbours)
+			{
+				if (boid == this)
+					continue;
+
+				var d = (boid.Position - Position).Length;
+				if (d < 0.125f && d > 0)
+				{
+					dir -= (Position - boid.Position).Normalized();
+					//dir /= d;
+				}
+			}
+
+			ApplyForce(dir * SeparationStrength);
+		}
+
+		private void Align(List<Boid> neighbours)
+		{
+			var dir = new Vector3(0, 0, 0);
+			int BoidsInRange = 0;
+			foreach (var boid in neighbours)
+			{
+				if (boid == this)
+					continue;
+				var d = (boid.Position - Position).Length;
+				if (d < ViewDistance && d > 0)
+				{
+					dir += boid.Velocity;
+					BoidsInRange++;
+				}
+			}
+			if (BoidsInRange > 0)
+			{
+				dir /= BoidsInRange;
+				dir = dir.Normalized();
+			}
+
+			ApplyForce((dir - Velocity) * AlignmentStrength);
+		}
+
+		private void Cohesion(List<Boid> neighbours)
+		{
+			var dir = new Vector3(0, 0, 0);
+			var avgPos = new Vector3(0, 0, 0);
+			var BoidsInRange = 0;
+			foreach (var boid in neighbours)
+			{
+				if (boid == this)
+					continue;
+
+				var d = (boid.Position - Position).Length;
+				if (d < ViewDistance && d > 0)
+				{
+					avgPos += boid.Position;
+					BoidsInRange++;
+				}
+			}
+			if (BoidsInRange > 0)
+			{
+				avgPos /= BoidsInRange;
+				dir = avgPos - Position;
+			}
+
+			ApplyForce(dir * CohesionStrength);
+		}
+
 
 		private void Bounds()
 		{
-			if (Position.X > 10f)
+			if (Position.X >= 5f)
 			{
-				Position.X = -10f;
+				Position.X = -5f;
 			}
-			else if (Position.X < -10f)
+			else if (Position.X <= -5f)
 			{
-				Position.X = 10f;
-			}
-
-			if (Position.Y > 10f)
-			{
-				Position.Y = -10f;
-			}
-			else if (Position.Y < -10f)
-			{
-				Position.Y = 10f;
+				Position.X = 5f;
 			}
 
-			if (Position.Z > 10f)
+			if (Position.Y >= 5f)
 			{
-				Position.Z = -10f;
+				Position.Y = -5f;
 			}
-			else if (Position.Z < -10f)
+			else if (Position.Y <= -5f)
 			{
-				Position.Z = 10f;
+				Position.Y = 5f;
+			}
+
+			if (Position.Z >= 5f)
+			{
+				Position.Z = -5f;
+			}
+			else if (Position.Z <= -5f)
+			{
+				Position.Z = 5f;
 			}
 		}
 

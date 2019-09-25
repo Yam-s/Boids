@@ -21,10 +21,18 @@ namespace Boids
 		{
 			FlockSize = flockSize;
 			Boids.Clear();
-			for (var i = 0; i < FlockSize; i++)
+			for (var i = 1; i <= FlockSize; i++)
 			{
 				var boid = new Boid();
-				boid.Position = new Vector3(Program.RANDOM.Next(10) * 2 - 10, Program.RANDOM.Next(10) * 2 - 10, Program.RANDOM.Next(10) * 2 - 10);
+				boid.Position = new Vector3(
+					(float)Program.RANDOM.NextDouble() * (-5 - 5) + 5,
+					(float)Program.RANDOM.NextDouble() * (-5 - 5) + 5,
+					(float)Program.RANDOM.NextDouble() * (-5 - 5) + 5);
+
+				boid.Velocity = new Vector3(
+					Program.RANDOM.Next(0, 1) == 1 ? 1.0f : -1.0f,
+					Program.RANDOM.Next(0, 1) == 1 ? 1.0f : -1.0f,
+					Program.RANDOM.Next(0, 1) == 1 ? 1.0f : -1.0f);
 				Boids.Add(boid);
 			}
 		}
