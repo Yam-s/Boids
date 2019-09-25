@@ -30,9 +30,9 @@ namespace Boids
 					(float)Program.RANDOM.NextDouble() * (-5 - 5) + 5);
 
 				boid.Velocity = new Vector3(
-					Program.RANDOM.Next(0, 1) == 1 ? 1.0f : -1.0f,
-					Program.RANDOM.Next(0, 1) == 1 ? 1.0f : -1.0f,
-					Program.RANDOM.Next(0, 1) == 1 ? 1.0f : -1.0f);
+					Program.RANDOM.Next(2) * 2 - 1,
+					Program.RANDOM.Next(2) * 2 - 1,
+					Program.RANDOM.Next(2) * 2 - 1);
 				Boids.Add(boid);
 			}
 		}
