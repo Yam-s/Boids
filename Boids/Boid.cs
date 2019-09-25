@@ -21,6 +21,7 @@ namespace Boids
 		public float CohesionStrength = 0.2f;
 
 		public Matrix4 model;
+		public Vector3 Up = new Vector3(0,1,0);
 
 		public Boid()
 		{
@@ -31,9 +32,24 @@ namespace Boids
 			Acceleration += force;
 		}
 
+		private Matrix4 CalculateRotation()
+		{
+			var rotAngle = (float)Math.Acos(Vector3.Dot(Up, Velocity.Normalized()));
+
+			if (Math.Abs(rotAngle) < 0.001f)
+				return Matrix4.Zero;
+
+			var rotAxis = Vector3.Cross(Up, Velocity.Normalized());
+
+			return Matrix4.CreateFromAxisAngle(rotAxis, rotAngle);
+		}
+
 		public void Update(float deltaTime, Flock flock)
 		{
-			model = Matrix4.CreateScale(0.075f) * Matrix4.CreateTranslation(Position);
+			var rotation = CalculateRotation();
+
+			if (rotation != Matrix4.Zero)
+				model = Matrix4.CreateScale(0.075f) * rotation * Matrix4.CreateTranslation(Position);
 
 			Bounds();
 
@@ -55,7 +71,7 @@ namespace Boids
 			Cohesion(neighbours);
 
 			Velocity += Acceleration;
-			Position += Velocity * deltaTime;
+			Position += Velocity.Normalized() * 2.0f * deltaTime;
 			Acceleration = new Vector3(0, 0, 0);
 		}
 
@@ -68,10 +84,10 @@ namespace Boids
 					continue;
 
 				var d = (boid.Position - Position).Length;
-				if (d < 0.125f && d > 0)
+				if (d < 0.5f && d > 0)
 				{
-					dir -= (Position - boid.Position).Normalized();
-					//dir /= d;
+					dir = (Position - boid.Position).Normalized();
+					dir /= d;
 				}
 			}
 
